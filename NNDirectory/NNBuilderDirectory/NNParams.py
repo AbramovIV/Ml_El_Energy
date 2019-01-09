@@ -47,6 +47,9 @@ class NNparams:
     def get_nn_model(self):
         return self._model
 
+    def set_nn_model(self, model):
+        self._model = model
+
     def __init__(self, hidden, dropout, optimizer, l1reg, l2reg, activation, input_dim,
                  loss, train_metric, batch_size, kernel_init, bias_init):
         self.hidden = hidden

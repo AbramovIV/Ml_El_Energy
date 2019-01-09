@@ -1,13 +1,23 @@
-from NNDirectory.LsDirectory.LearningSetCl import LearningSet
+import pandas as pd
+import matplotlib.pyplot as plt
 
-ls = LearningSet(path_to_df=r'C:\Users\vgv\Desktop\PythonData\cleanedDf.txt')
-my_df = ls.create_learningSet(ls.initial_df)
-df_enc = ls.encode_categorials_features(my_df)
-df_scale = ls.my_scale(df_enc)
 
-#cor = df_scale.corr()
-#plt.matshow(cor)
-#plt.xticks(range(len(df_scale.columns)), df_scale.columns)
-#plt.yticks(range(len(df_scale.columns)), df_scale.columns)
-#plt.colorbar()
-#plt.show()
+initial_df = pd.read_table(r'C:\Users\vgv\Desktop\PythonData\initSet.txt', sep=" ", header=0, na_values='nan', keep_default_na=True)
+history_init = initial_df['HistoryLoad']
+
+cleaned_df = pd.read_table(r'C:\Users\vgv\Desktop\PythonData\cleanedDf.txt', sep=" ", header=0, na_values='nan', keep_default_na=True)
+history_cleaned = cleaned_df['HistoryLoad']
+
+counter_0 = 0
+for h in history_init:
+    if h <= 0:
+        counter_0 = counter_0 + 1
+
+dif = history_init - history_cleaned
+un = pd.Series(dif).unique()
+count = len(un)
+
+
+plt.plot(dif)
+plt.show()
+z = 1

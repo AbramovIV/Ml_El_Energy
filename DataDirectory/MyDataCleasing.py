@@ -16,13 +16,14 @@ class MyDataCleasing:
         # remove unnecessary columns in initial df
         self.my_data.initDf = self.my_data.initDf.drop('LoadPlan', axis=1)
         # change values of electricity load that <= 0 to nan, i.e. a priory outliers
-        self.my_data.initDf.loc[self.my_data.initDf['HistoryLoad'] <= 0, 'HistoryLoad'] = np.nan
+        #self.my_data.initDf.loc[self.my_data.initDf['HistoryLoad'] <= 0, 'HistoryLoad'] = np.nan
         self.initDf = self.my_data.initDf.copy()
         print('count of nan = ', self.my_data.initDf['HistoryLoad'].isna().sum())
         # create diff el with lag = 1 load column in df
         self.my_data.initDf['DiffElLoad'] = self.my_data.initDf.HistoryLoad.diff()
         # filling df that will be cleaned from other outliers
         self.dfToClean = self.my_data.initDf.copy().dropna()
+
         self.dfToClean = self.dfToClean.set_index('Id')
         mdc.dfToClean['Id'] = self.dfToClean.index.values
 
@@ -81,7 +82,7 @@ class MyDataCleasing:
                             countOfReplace = countOfReplace + 1
         print('Count of all outliers = ', countOfReplace)
 
-data_path = "C:/Users/vgv/Desktop/initSet.txt"
+data_path = "C:/Users/vgv/Desktop/PythonData/initSet.txt"
 mdc = MyDataCleasing(data_path=data_path)
 mdc.my_data.fill_data()
 mdc.prepare_initdf()

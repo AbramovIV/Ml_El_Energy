@@ -4,6 +4,7 @@ from NNDirectory.LsDirectory.Prepare_Ls import Prepare_Ls
 from NNDirectory.MyPredict import My_Predict
 from NNDirectory.NNBuilderDirectory.MyCv import MyCv
 from NNDirectory.NNBuilderDirectory.NNParams import NNparams
+import matplotlib.pyplot as plt
 
 # load data
 ls_obj = LearningSet(path_to_df=r'C:\Users\vgv\Desktop\PythonData\cleanedDf.txt')
@@ -16,10 +17,23 @@ one_hot_columns = ['Time', 'DayName', 'WorkType']
 #one_hot_columns = list()
 prep_ls = Prepare_Ls(categorial_cols=categorial_cols, one_hot_encoding_names=one_hot_columns, response=response)
 df_test = my_df.drop(['HistoryLoad', 'Id'], axis=1)
-input_shape = prep_ls.get_nums_of_predictors(df=df_test) - 1
 
+
+numcols =  set(df_test.columns.values) - set(categorial_cols)
+df_scale = df_test.loc[:, numcols]
+cor = df_scale.corr()
+
+#plt.matshow(cor)
+#plt.xticks(range(len(df_scale.columns)), df_scale.columns)
+#plt.yticks(range(len(df_scale.columns)), df_scale.columns)
+#plt.colorbar()
+#plt.show()
+
+input_shape = prep_ls.get_nums_of_predictors(df=df_test) - 1
+perc = 80
+hid = round( (len(numcols)*perc)/100)
 # create neural model
-nn = NNparams(hidden=[25], dropout=[0.0],
+nn = NNparams(hidden=[hid], dropout=[0.0],
               optimizer=keras.optimizers.Adam(amsgrad=True),
               l1reg=0, l2reg=0,
               activation='relu', input_dim=input_shape,
