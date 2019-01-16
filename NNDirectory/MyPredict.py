@@ -22,7 +22,7 @@ class My_Predict:
         self.cross_val = cross_val
         self.prepare_ls = prepare_ls
 
-    def test_my_model(self, first_pred_ind, last_pred_ind):
+    def test_my_model(self, first_id, last_id):
         history_load_df = self.my_df[['HistoryLoad', 'Id']]
 
         # create log for prediction
@@ -38,8 +38,14 @@ class My_Predict:
         trained = False
         retrain = False
         self.nn.get_nn_model().save_weights(self.cross_val.model_initial_weights)
-        for i in range(first_pred_ind, last_pred_ind):
-            ls = self.my_df.iloc[:i, :]
+        #a = self.my_df.iloc[first_pred_ind - 9000 : ,]
+        #import matplotlib.pyplot as plt
+        #plt.plot(a.DiffHistoryLoad.values)
+        #plt.show()
+
+
+        for i in range(first_id, last_id):
+            ls = self.my_df.loc[self.my_df.Id <= i]
             # predicted id in initial df
             prediction_row = ls.iloc[-1, :]
             id_of_predicted = ls.iloc[-1, :].Id
@@ -53,15 +59,15 @@ class My_Predict:
             ls_encoded = self.prepare_ls.encode_and_scale_ls_factors(ls)
             # prepare to neural net
             train, test = self.prepare_ls.get_train_test_set(ls_encoded)
-            Y = train[self.response].values
-            X = train.drop(self.response, axis=1).values
-            x_test = test.drop(self.response, axis=0).values
+            Y = train[self.response]
+            X = train.drop(self.response, axis=1)#.values
+            x_test = test.drop(self.response, axis=0)#.values
 
             if count_retrain == 168 or first_train is True:
 
                 model = self.cross_val.myCross_validation(nn=self.nn,
-                                                          X=X,
-                                                          Y=Y,
+                                                          Xset=X,
+                                                          Yset=Y,
                                                           n_folds=10,
                                                           max_epoch=1000,
                                                           trained=trained
@@ -72,11 +78,13 @@ class My_Predict:
                                                                Y=Y
                                                                )
                 count_retrain = 0
-                self.cross_val.buildCvPlot()
+                #self.cross_val.buildCvPlot()
 
             prediction = final_model.predict(np.array([x_test]))[0][0]
 
-            unscale_prediction = unscale_el_load_pred(pred=prediction, a=1, b=3, el_train=ls[self.response].iloc[:-1])
+            # unscale_prediction = unscale_el_load_pred(pred=prediction, a=1, b=3, el_train=ls[self.response].iloc[:-1])
+            test['DiffHistoryLoad'] = prediction
+            unscale_prediction = self.prepare_ls.unscale_prediction(test)
             final_prediction = undiffPred(pred=unscale_prediction, history_lag=Prev_HISTORICAL_LOAD)
             pred_mape = mape_pred(predicted=final_prediction, history=HISTORICAL_LOAD)
 

@@ -42,16 +42,45 @@ class NNparams:
                 model.add(Dropout(self.dropout[i]))
         model.add(Dense(1, activation='linear'))
         model.compile(loss=self.loss, optimizer=self.optimizer, metrics=self.train_metric)
+        self._model = model
+        return model
+
+    def _buildNNModel_noCompile(self):
+        model = Sequential()
+        for i in range(0, len(self.hidden)):
+            if i == 0:
+                model.add(Dense(self.hidden[i], input_dim=self.input_dim,
+                                kernel_initializer=self.kernel_initializer,
+                                bias_initializer=self.bias_initializer,
+                                activation=self.activation,
+                                activity_regularizer=keras.regularizers.l1_l2(self.l1, self.l2)
+                                ))
+                #model.add(keras.layers.advanced_activations.LeakyReLU(alpha=0.01))
+                model.add(Dropout(self.dropout[i]))
+            if i != 0:
+                model.add(Dense(self.hidden[i],
+                                kernel_initializer=self.kernel_initializer,
+                                bias_initializer=self.bias_initializer,
+                                activation=self.activation,
+                                activity_regularizer=keras.regularizers.l1_l2(self.l1, self.l2)
+                                ))
+                #model.add(keras.layers.advanced_activations.LeakyReLU(alpha=0.01))
+                model.add(Dropout(self.dropout[i]))
+        model.add(Dense(1, activation='linear'))
+        #model.compile(loss=self.loss, optimizer=self.optimizer, metrics=self.train_metric)
+        self._model = model
         return model
 
     def get_nn_model(self):
+        if self._model is None:
+            _model = self._buildNNModel()
         return self._model
 
     def set_nn_model(self, model):
         self._model = model
 
     def __init__(self, hidden, dropout, optimizer, l1reg, l2reg, activation, input_dim,
-                 loss, train_metric, batch_size, kernel_init, bias_init):
+                 loss, train_metric, batch_size, kernel_init, bias_init,compile):
         self.hidden = hidden
         self.activation = activation
         self.dropout = dropout
@@ -64,4 +93,8 @@ class NNparams:
         self.kernel_initializer = kernel_init
         self.bias_initializer = bias_init
         self.train_metric = train_metric
-        self._model = self._buildNNModel()
+        if compile is False:
+            self._model = self._buildNNModel_noCompile()
+        else:
+            self._model = self._buildNNModel()
+
