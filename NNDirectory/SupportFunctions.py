@@ -12,7 +12,7 @@ def ordinal_transform_categorials(df, col_names):
     df_to_enc_arr = enc.fit_transform(df_to_enc)
     df_to_enc = pd.DataFrame(data=df_to_enc_arr[0:, 0:], index=df_to_enc.index, columns=enc_col_names)
     #df = pd.concat([df_to_enc, df_not_enc], axis=1, sort=False, join_axes=[df.index])
-    res = df_not_enc.join(df_to_enc)
+    res = pd.concat([df_to_enc, df_not_enc], axis=1, sort=False, join_axes=[df.index])
     return res
 
 def one_hot_transform_categorials(df):

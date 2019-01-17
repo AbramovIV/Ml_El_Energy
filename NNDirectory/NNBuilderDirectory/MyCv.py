@@ -135,11 +135,10 @@ class MyCv:
         #     nn.get_nn_model().save_weights(filepath=self.model_cv_filepath)
         ind = Xset.index.values
         last = ind[-1]
-
-        x_train_cv = Xset.iloc[ : (last - 4140), ]
-        y_train_cv = Yset[ : (last - 4140) ]
-        x_valid_cv = Xset.iloc[(last - 4139):, ]
-        y_valid_cv = Yset[(last - 4139): ]
+        x_train_cv = Xset.iloc[ : (last - 8140), :]
+        y_train_cv = Yset[ : (last - 8140) ]
+        x_valid_cv = Xset.iloc[(last - 8139):, :]
+        y_valid_cv = Yset[(last - 8139): ]
 
 
 
@@ -230,12 +229,12 @@ class MyCv:
 
     def train_final_model(self, nn : NNparams, X, Y):
         nnPred = NNparams(hidden=nn.hidden, dropout=nn.dropout,
-                          optimizer=keras.optimizers.Adam(amsgrad=True),
+                          optimizer=keras.optimizers.Adam( lr=1e-3),
                           l1reg=nn.l1, l2reg=nn.l2,
                           activation='relu', input_dim=self.input_shape,
                           loss='mean_squared_error',
                           train_metric=['mean_absolute_error'],
-                          batch_size=12,
+                          batch_size=24,
                           kernel_init='random_uniform', bias_init='zeros',
                           compile=False
                          )
@@ -244,10 +243,10 @@ class MyCv:
         nn = nnPred
         ind = X.index.values
         last = ind[-1]
-        x_train_cv = X.iloc[(last - 4139): (last - 900), ]
-        y_train_cv = Y[(last - 4139): (last - 900) ]
-        x_valid_cv = X.iloc[last - 899 :, ]
-        y_valid_cv = Y[last - 899 : ]
+        x_train_cv = X.iloc[(last - 8139): (last - 1900), ]
+        y_train_cv = Y[(last - 8139): (last - 1900) ]
+        x_valid_cv = X.iloc[last - 1899 :, ]
+        y_valid_cv = Y[last - 1899 : ]
 
         # create cv
         n = len(x_valid_cv)
@@ -255,7 +254,7 @@ class MyCv:
         start_ind = init_ind[0]
         end_ind = init_ind[-1]
         rnd_ind = [randint(start_ind, end_ind) for p in range(start_ind, end_ind)]
-        val_size = round(len(x_valid_cv) / 3)
+        val_size = round(len(x_valid_cv) / 2)
         fin_val_ind = rnd_ind[:val_size]
         fin_x_val = x_valid_cv.iloc[x_valid_cv.index.isin(fin_val_ind)]
         fin_y_val = y_valid_cv[y_valid_cv.index.isin(fin_val_ind)]

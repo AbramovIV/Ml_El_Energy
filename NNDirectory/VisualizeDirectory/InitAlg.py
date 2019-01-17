@@ -15,8 +15,10 @@ ls_obj = LearningSet(path_to_df=r'C:\Users\vgv\Desktop\PythonData\cleanedDf.txt'
 response = 'DiffHistoryLoad'
 my_df = ls_obj.create_learningSet(ls_obj.initial_df)
 
-my_df = my_df.loc[my_df['Year'] > 2014, :]
+#my_df = my_df.loc[my_df['Year'] > 2014, :]
 
+
+my_df = my_df.reset_index(drop=True)  # CHECK THIS
 
 
 my_df.loc[my_df['DayName'] == 'Mon', 'DayName'] = 1
@@ -36,7 +38,7 @@ my_df.loc[my_df['PrevWorkType'] == 'DayOff', 'PrevWorkType'] = 2
 my_df.loc[my_df['PrevWorkType'] == 'Holiday', 'PrevWorkType'] = 3
 
 # prepare learning set
-categorial_cols = ['Year', ]
+categorial_cols = ['Year' ]
 #one_hot_columns = ['Month', 'Day', 'DayName', 'WorkType', 'PrevWorkType', 'Time']
 one_hot_columns = list()
 prep_ls = Prepare_Ls(categorial_cols=categorial_cols, one_hot_encoding_names=one_hot_columns, response=response)
@@ -57,16 +59,16 @@ cor = df_scale.corr()
 
 input_shape = prep_ls.get_nums_of_predictors(df=df_test) - 1
 perc = 90
-hid = [len(numcols)*4]  #round( (len(numcols)*perc)/100)
+hid = [len(numcols)*3]  #round( (len(numcols)*perc)/100)
 drop = [0.5]
 # create neural model
 nn = NNparams(hidden=hid, dropout=drop,
               optimizer=keras.optimizers.Adam(amsgrad=True),
-              l1reg=1e-6, l2reg=1e-6,
+              l1reg=0, l2reg=0,
               activation='relu', input_dim=input_shape,
               loss='mean_squared_error',
               train_metric=['mean_absolute_error'],
-              batch_size=24,
+              batch_size=168,
               kernel_init='random_uniform', bias_init='zeros',
               compile=True
               )

@@ -8,10 +8,10 @@ from NNDirectory.SupportFunctions import ordinal_transform_categorials,  my_min_
 
 class LearningSet:
 
-    lags_dict = {1: 0, 2: 0, 3: 0, 4: 0,
-                 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0,
-                 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0, 21: 0, 22: 0, 23: 0,
-                 24: 0, 48: 0, 72: 0, 96: 0, 120: 0, 144: 0, 168: 0,
+    lags_dict = {1: 0, 2: 0, 3: 0, 4: 0, 24:0
+                 #5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0,
+                 #15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0, 21: 0, 22: 0, 23: 0,
+                 #24: 0, 48: 0, 72: 0, 96: 0, 120: 0, 144: 0, 168: 0,
                  #25: 24, 47: 24, 73: 24, 97: 24, 121: 24, 145: 24, 169: 24
                  #25: 24, 49: 24, 73: 24, 97: 24, 121: 24, 145: 24, 169: 24,
                 }
@@ -36,16 +36,16 @@ class LearningSet:
 
     def create_learningSet(self, df: pd.DataFrame):
         df.loc[df['HistoryLoad'] <= 0, 'HistoryLoad'] = np.nan
-        df['DiffHistoryLoad'] = df['HistoryLoad'].diff(1)
+        df['DiffHistoryLoad'] = df['HistoryLoad']#.diff(167)
         init_ts = df['DiffHistoryLoad']
         #init_ts = df['HistoryLoad']
         differences_ts_dict = {0: init_ts,
-                               1: init_ts.diff(1),
-                               2: init_ts.diff(2),
-                               3: init_ts.diff(3),
-                               4: init_ts.diff(4),
-                               24: init_ts.diff(24),
-                               168: init_ts.diff(168)
+                               1: init_ts.diff(0),
+                               2: init_ts.diff(0),
+                               3: init_ts.diff(0),
+                               4: init_ts.diff(0),
+                               24: init_ts.diff(0),
+                               168: init_ts.diff(0)
                                }
 
         lags = self.lags_dict.keys()
@@ -63,23 +63,23 @@ class LearningSet:
                  name = 'lag_pca_most'
             name = name + str(l)
             df[name] = ts
-        window_4 = init_ts.shift(1).rolling(window=4)
-        means = window_4.mean()
-        window_12 = init_ts.shift(1).rolling(window=12)
-        maxs = window_12.max()
-        mins = window_12.min()
-        std = window_12.std()
-        memS = window_4.apply(self.membeshipS)
-        df['mems'] = memS
-        #df['std'] = std
-        df['means_1lag'] = means
-        df['max_1lag'] = maxs
-        df['min_1lag'] = mins
-        print('count of nan = ', df.isna().sum())
+        # window_4 = init_ts.shift(1).rolling(window=4)
+        # means = window_4.mean()
+        # window_12 = init_ts.shift(1).rolling(window=12)
+        # maxs = window_12.max()
+        # mins = window_12.min()
+        # std = window_12.std()
+        # memS = window_4.apply(self.membeshipS)
+        # df['mems'] = memS
+        # #df['std'] = std
+        # df['means_1lag'] = means
+        # df['max_1lag'] = maxs
+        # df['min_1lag'] = mins
+        # print('count of nan = ', df.isna().sum())
 
 
         df = df.dropna()
-        df = df.reset_index() #  CHECK THIS
+
         # matching_day = [s for s in df.columns.values if "lag_pca_day" in s]
         # df = self.transformPca(df, matching_day, 8, 'day')
         # matching_week = [s for s in df.columns.values if "lag_pca_week" in s]

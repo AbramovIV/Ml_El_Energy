@@ -51,7 +51,7 @@ class My_Predict:
             id_of_predicted = ls.iloc[-1, :].Id
             HISTORICAL_LOAD = history_load_df.loc[history_load_df['Id'] == id_of_predicted, 'HistoryLoad'].values[0]
             Prev_HISTORICAL_LOAD = \
-                history_load_df.loc[history_load_df['Id'] == (id_of_predicted - 1), 'HistoryLoad'].values[0]
+                history_load_df.loc[history_load_df['Id'] == (id_of_predicted - 168), 'HistoryLoad'].values[0]
 
             # remove unness columns
             ls = ls.drop(['HistoryLoad', 'Id'], axis=1)
@@ -85,7 +85,8 @@ class My_Predict:
             # unscale_prediction = unscale_el_load_pred(pred=prediction, a=1, b=3, el_train=ls[self.response].iloc[:-1])
             test['DiffHistoryLoad'] = prediction
             unscale_prediction = self.prepare_ls.unscale_prediction(test)
-            final_prediction = undiffPred(pred=unscale_prediction, history_lag=Prev_HISTORICAL_LOAD)
+            #final_prediction = undiffPred(pred=unscale_prediction, history_lag=Prev_HISTORICAL_LOAD)
+            final_prediction = unscale_prediction
             pred_mape = mape_pred(predicted=final_prediction, history=HISTORICAL_LOAD)
 
             prediction_log = '{0} {1} {2} {3} {4} {5} {6}\n'.format(str(prediction_row.Year), str(prediction_row.Month),
