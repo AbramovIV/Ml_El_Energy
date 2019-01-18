@@ -68,7 +68,7 @@ nn = NNparams(hidden=hid, dropout=drop,
               activation='relu', input_dim=input_shape,
               loss='mean_squared_error',
               train_metric=['mean_absolute_error'],
-              batch_size=168,
+              batch_size=24,
               kernel_init='random_uniform', bias_init='zeros',
               compile=True
               )

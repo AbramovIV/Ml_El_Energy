@@ -1,3 +1,6 @@
+import warnings
+
+import keras
 import numpy as np
 import pandas as pd
 import sklearn
@@ -8,6 +11,12 @@ from sklearn.preprocessing import OneHotEncoder, LabelEncoder, MinMaxScaler
 
 from DataDirectory.LoadData import LoadData
 from NNDirectory.LsDirectory.LearningSetCl import LearningSet
+from NNDirectory.MyPredict import My_Predict
+from NNDirectory.NNBuilderDirectory.MyCv import MyCv
+from NNDirectory.NNBuilderDirectory.NNParams import NNparams
+from sklearn.exceptions import DataConversionWarning
+
+from NNDirectory.PreprocessingDirectory.MyMinMaxScaller import MyMinMaxScaller
 
 
 class MyPreprocess:
@@ -18,6 +27,7 @@ class MyPreprocess:
     learning_set = pd.DataFrame
     categorial_cols = List[str]
     target = str
+    num_of_categorials = int
 
     def __init__(self, initital_df: pd.DataFrame, target: str, response: str,
                  prediction_lag_diff: int, lags_dict_diff: Dict[int, int]):
@@ -27,84 +37,96 @@ class MyPreprocess:
         self.response = response
         self.lags_dict_diff = lags_dict_diff
         self.learning_set = initital_df.copy(deep=True)
+        self.num_of_categorials = 0
+        warnings.filterwarnings(action='ignore', category=DataConversionWarning)
 
     def set_prediction_series(self):
         response_series = self.initital_df[self.target]
         response_series = response_series.diff(self.prediction_lag_diff).values
-        self.learning_set[response] = pd.Series(response_series, index=self.learning_set.index)
+        self.learning_set[self.response] = pd.Series(response_series, index=self.learning_set.index)
 
     def set_augmentations_lags(self, isDiff:bool):
         init_series = self.learning_set[self.response]
         if isDiff is False:
             for lag in self.lags_dict_diff.keys():
                 lag_series = init_series.shift(lag).values
-                name = 'lag_' + str(lag)
+                name = 'lag' + str(lag)
                 self.learning_set[name] = pd.Series(lag_series, index=self.learning_set.index)
         else:
             for lag in self.lags_dict_diff.keys():
                 diff_key = self.lags_dict_diff.get(lag)
-                diff_series = init_series.diff(diff_key)
-                lag_series = diff_series.shift(lag).values
-                name = 'lag_' + str(lag)
-                self.learning_set[name] = pd.Series(lag_series, index=self.learning_set.index)
+                if diff_key == 0:
+                    lag_series = init_series.shift(lag)
+                    name = 'lag' + str(lag)
+                    self.learning_set[name] = pd.Series(lag_series, index=self.learning_set.index)
+                    continue
+                else:
+                    diff_series = init_series.diff(diff_key)
+                    lag_series = diff_series.shift(lag).values
+                    name = 'lag' + str(lag)
+                    self.learning_set[name] = pd.Series(lag_series, index=self.learning_set.index)
 
     def encode_one_hot(self, df: pd.DataFrame, colls_to_one_hot: List[str]):
         df_c = df.copy(deep=True)
 
         for onh in colls_to_one_hot:
             dummies = pd.get_dummies(df_c[onh], prefix=onh, drop_first=False)
+
             df_c = pd.concat([df_c, dummies], axis=1)
+            self.num_of_categorials = self.num_of_categorials + dummies.shape[1]
         df_c = df_c.drop(colls_to_one_hot, axis=1)
         return df_c
 
-    def scale_df(self, df: pd.DataFrame):
+    def scale_train_df(self, df: pd.DataFrame):
         df_c = df.copy(deep=True)
         old_indexis = df_c.index.values
-        x = df_c.values
-        self.min_max_scaler = MinMaxScaler()
-        x_scaled = self.min_max_scaler.fit_transform(x)
-        res = pd.DataFrame(x_scaled, columns=df_c.columns.values, index=old_indexis)
-        res[response].iloc[-1] = np.nan
-        return res
+        #self.min_max_scaler = MinMaxScaler(feature_range=(0, 1))
+        self.min_max_scaler = MyMinMaxScaller(low_range=-1, top_range=1)
 
-load_data = LoadData(r'C:\Users\vgv\Desktop\PythonData\cleanedDf.txt')
-response = 'DiffHistoryLoad'
-my_df = load_data.initDf
+        x_scaled = self.min_max_scaler.transform(df_c)
+        x_scaled = self.fix_categorials(x_scaled)
+        #res = pd.DataFrame(x_scaled, columns=df_c.columns.values, index=old_indexis)
+        return x_scaled
 
-lags_dict = {1: 0, 2: 0, 3: 0, 4: 0, 24: 0
-             5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0,
-             15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0, 21: 0, 22: 0, 23: 0,
-             24: 0, 48: 0, 72: 0, 96: 0, 120: 0, 144: 0, 168: 0,
-             # 25: 24, 47: 24, 73: 24, 97: 24, 121: 24, 145: 24, 169: 24
-             # 25: 24, 49: 24, 73: 24, 97: 24, 121: 24, 145: 24, 169: 24,
-             }
+    def scale_test_df(self, df: pd.DataFrame):
+        df_c = df.copy(deep=True)
+        old_indexis = df_c.index.values
+        x_scaled = self.min_max_scaler.scale(df_c)
+        x_scaled = self.fix_categorials(x_scaled)
+        #res = pd.DataFrame(x_scaled, columns=df_c.columns.values, index=old_indexis)
+        #res.iloc[0][self.response] = np.nan
+        return x_scaled
 
-preprocess = MyPreprocess(initital_df=my_df, target='HistoryLoad', response='DiffHistoryLoad',
-                          prediction_lag_diff=1, lags_dict_diff=lags_dict)
-preprocess.set_prediction_series()
+    def scale_collumn_prep(self, ser: pd.Series, coll: str, max_val, min_val):
+        return self.min_max_scaler.scale_collumn(ser, coll, max_val, min_val)
 
-#year live as numeric feature
-categorial_cols = ['Month', 'Day', 'DayName', 'WorkType', 'Time']
-preprocess.learning_set = preprocess.encode_one_hot(preprocess.learning_set, categorial_cols)
-preprocess.set_augmentations_lags(isDiff=False)
+    def unsale_prediction(self, df: pd.DataFrame):
+        unscale = self.min_max_scaler.inverse_transform(df)
+        #res_df = pd.DataFrame(data=unscale, columns=df.columns.values)
+        #res = res_df.iloc[0][self.response]
+        return unscale.iloc[0][self.response]
+
+    def get_train_test_set(self, df: pd.DataFrame):
+        test_set = df.iloc[-1, :]
+        train_set = df.iloc[:-1, :]
+        return train_set, test_set
+
+    def undiff_pred(self, pred, history_lag):
+        return (history_lag + pred)
+
+    def mape_pred(self, predicted, history):
+        return abs((history - predicted) / history) * 100.0
+
+
+    def fix_categorials(self, df: pd.DataFrame):
+        df_c = df.copy(deep=True)
+        matching_colls = [s for s in df.columns.values if "_" in s]
+        for coll in matching_colls:
+            df_c[coll] = df_c[coll].replace(-1, 0)
+        return df_c
 
 
 
-input_shape = len(preprocess.learning_set.columns.values) - 3 #i.e. - {HistoryLoad, DiffHistoryLoad, Id}
-perc = 90
-hid = [len(numcols)*3]  #round( (len(numcols)*perc)/100)
-drop = [0.5]
-# create neural model
-nn = NNparams(hidden=hid, dropout=drop,
-              optimizer=keras.optimizers.Adam(amsgrad=True),
-              l1reg=0, l2reg=0,
-              activation='relu', input_dim=input_shape,
-              loss='mean_squared_error',
-              train_metric=['mean_absolute_error'],
-              batch_size=168,
-              kernel_init='random_uniform', bias_init='zeros',
-              compile=True
-              )
 
 
 

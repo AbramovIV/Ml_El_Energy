@@ -56,8 +56,8 @@ class MyCv:
         self.early_stop_cv = keras.callbacks.EarlyStopping(
                                                            monitor='val_mean_absolute_error',
                                                            #monitor='val_loss',
-                                                           min_delta=1e-6,
-                                                           patience=10,
+                                                           min_delta=1e-3,
+                                                           patience=30,
                                                            verbose=2,
                                                            mode='min',
                                                            restore_best_weights=True
@@ -66,7 +66,7 @@ class MyCv:
         self.early_stop_cv_final = keras.callbacks.EarlyStopping(
                                                                  monitor='val_mean_absolute_error',
                                                                  #monitor='loss',
-                                                                 min_delta=1e-6,
+                                                                 min_delta=1e-3,
                                                                  patience=20,
                                                                  verbose=2,
                                                                  mode='min',
@@ -165,7 +165,7 @@ class MyCv:
         # valid_error = res_fit.history['val_mean_absolute_error']
         # self.results_cv.append(([train_error], [valid_error]))
         # #nn.get_nn_model().save(filepath=self.model_path, overwrite=True, include_optimizer=True)
-        self.buildCvPlot()
+        # self.buildCvPlot()
         self.recommended_train_epoch = round(self.epoch_cv/counter_load_weigths)
         nn.get_nn_model().save_weights(filepath=self.model_cv_filepath)
         return nn.get_nn_model()
@@ -229,12 +229,12 @@ class MyCv:
 
     def train_final_model(self, nn : NNparams, X, Y):
         nnPred = NNparams(hidden=nn.hidden, dropout=nn.dropout,
-                          optimizer=keras.optimizers.Adam( lr=1e-3),
+                          optimizer=keras.optimizers.Adam(lr=1e-3, amsgrad=True),
                           l1reg=nn.l1, l2reg=nn.l2,
-                          activation='relu', input_dim=self.input_shape,
+                          activation=nn.activation, input_dim=self.input_shape,
                           loss='mean_squared_error',
                           train_metric=['mean_absolute_error'],
-                          batch_size=24,
+                          batch_size=12,
                           kernel_init='random_uniform', bias_init='zeros',
                           compile=False
                          )
@@ -243,12 +243,14 @@ class MyCv:
         nn = nnPred
         ind = X.index.values
         last = ind[-1]
+        x_train_cv = X.iloc[(last - 8139): , ]
+        y_train_cv = Y[(last - 8139): ]
+
         x_train_cv = X.iloc[(last - 8139): (last - 1900), ]
         y_train_cv = Y[(last - 8139): (last - 1900) ]
         x_valid_cv = X.iloc[last - 1899 :, ]
         y_valid_cv = Y[last - 1899 : ]
-
-        # create cv
+                # create cv
         n = len(x_valid_cv)
         init_ind = x_valid_cv.index.values
         start_ind = init_ind[0]
@@ -258,7 +260,6 @@ class MyCv:
         fin_val_ind = rnd_ind[:val_size]
         fin_x_val = x_valid_cv.iloc[x_valid_cv.index.isin(fin_val_ind)]
         fin_y_val = y_valid_cv[y_valid_cv.index.isin(fin_val_ind)]
-
         ind_to_train = set(init_ind) - set(fin_val_ind)
         to_train_x = x_valid_cv.iloc[x_valid_cv.index.isin(ind_to_train)]
         to_train_y = y_valid_cv[y_valid_cv.index.isin(ind_to_train)]

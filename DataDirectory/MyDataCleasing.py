@@ -16,7 +16,7 @@ class MyDataCleasing:
         # remove unnecessary columns in initial df
         self.my_data.initDf = self.my_data.initDf.drop('LoadPlan', axis=1)
         # change values of electricity load that <= 0 to nan, i.e. a priory outliers
-        #self.my_data.initDf.loc[self.my_data.initDf['HistoryLoad'] <= 0, 'HistoryLoad'] = np.nan
+        self.my_data.initDf.loc[self.my_data.initDf['HistoryLoad'] <= 0, 'HistoryLoad'] = np.nan
         self.initDf = self.my_data.initDf.copy()
         print('count of nan = ', self.my_data.initDf['HistoryLoad'].isna().sum())
         # create diff el with lag = 1 load column in df

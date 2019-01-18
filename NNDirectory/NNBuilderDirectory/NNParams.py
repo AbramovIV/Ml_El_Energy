@@ -26,19 +26,19 @@ class NNparams:
                 model.add(Dense(self.hidden[i], input_dim=self.input_dim,
                                 kernel_initializer=self.kernel_initializer,
                                 bias_initializer=self.bias_initializer,
-                                activation=self.activation,
+                                #activation=self.activation,
                                 activity_regularizer=keras.regularizers.l1_l2(self.l1, self.l2)
                                 ))
-                #model.add(keras.layers.advanced_activations.LeakyReLU(alpha=0.01))
+                model.add(keras.layers.advanced_activations.LeakyReLU())
                 model.add(Dropout(self.dropout[i]))
             if i != 0:
                 model.add(Dense(self.hidden[i],
                                 kernel_initializer=self.kernel_initializer,
                                 bias_initializer=self.bias_initializer,
-                                activation=self.activation,
+                                #activation=self.activation,
                                 activity_regularizer=keras.regularizers.l1_l2(self.l1, self.l2)
                                 ))
-                #model.add(keras.layers.advanced_activations.LeakyReLU(alpha=0.01))
+                model.add(keras.layers.advanced_activations.LeakyReLU())
                 model.add(Dropout(self.dropout[i]))
         model.add(Dense(1, activation='linear'))
         model.compile(loss=self.loss, optimizer=self.optimizer, metrics=self.train_metric)
