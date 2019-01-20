@@ -9,6 +9,7 @@ class MyDataCleasing:
     my_data = None
     dfToClean = None
     initDf = None
+
     def __init__(self, data_path):
         self.my_data = LoadData(data_path)
 
@@ -51,6 +52,7 @@ class MyDataCleasing:
                     xout, yout, weigts = loess_1d.loess_1d(my_df_current_month_in_year['Time'].values,
                                                            my_df_current_month_in_year['DiffElLoad'].values, frac=0.2)
                     # create column with loess result
+                    my_df_current_month_in_year = my_df_current_month_in_year.copy()
                     my_df_current_month_in_year['LoessSm'] = yout
                     # calc resudials of fitting from initial data
                     resudials = my_df_current_month_in_year['DiffElLoad'].values - \
@@ -81,7 +83,7 @@ class MyDataCleasing:
                             countOfReplace = countOfReplace + 1
         print('Count of all outliers = ', countOfReplace)
 
-data_path = "C:/Users/vgv/Desktop/initSet.txt"
+data_path = "C:/Users/Ilya/Desktop/PythonData/initSet.txt"
 mdc = MyDataCleasing(data_path=data_path)
 mdc.my_data.fill_data()
 mdc.prepare_initdf()
@@ -136,6 +138,6 @@ plt.plot(cleaned_df['HistoryLoad'].values)
 plt.show()
 print('count of nan = ', cleaned_df['HistoryLoad'].isna().sum())
 cleaned_df = cleaned_df.drop(['DiffElLoad'], axis=1)
-cleaned_df.to_csv(r'C:\Users\vgv\Desktop\PythonData\cleanedDf.txt', header=True, index=None, sep=' ', mode='a',
+cleaned_df.to_csv(r'C:\Users\Ilya\Desktop\PythonData\cleanedDf.txt', header=True, index=None, sep=' ', mode='a',
                   na_rep='nan')
 

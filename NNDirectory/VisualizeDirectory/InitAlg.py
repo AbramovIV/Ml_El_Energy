@@ -6,7 +6,7 @@ from NNDirectory.NNBuilderDirectory.MyCv import MyCv
 from NNDirectory.NNBuilderDirectory.NNParams import NNparams
 
 # load data
-ls_obj = LearningSet(path_to_df=r'C:\Users\vgv\Desktop\PythonData\cleanedDf.txt')
+ls_obj = LearningSet(path_to_df=r'C:\Users\Ilya\Desktop\PythonData\cleanedDf.txt')
 response = 'DiffHistoryLoad'
 my_df = ls_obj.create_learningSet(ls_obj.initial_df)
 
@@ -31,9 +31,9 @@ nn = NNparams(hidden=[25], dropout=[0.0],
               )
 
 # cross validation
-cross_val = MyCv(model_cv_filepath=r'C:\Users\vgv\Desktop\PythonData\cv_weights.hdf5',
-                 model_cv__final_filepath=r'C:\Users\vgv\Desktop\PythonData\cv_final_weights.hdf5',
-                 path_to_initial_weigths=r'C:\Users\vgv\Desktop\PythonData\init_weigths.hdf5'
+cross_val = MyCv(model_cv_filepath=r'C:\Users\Ilya\Desktop\PythonData\cv_weights.hdf5',
+                 model_cv__final_filepath=r'C:\Users\Ilya\Desktop\PythonData\cv_final_weights.hdf5',
+                 path_to_initial_weigths=r'C:\Users\Ilya\Desktop\PythonData\init_weigths.hdf5'
                  )
 
 first_pred_ind = my_df.index[my_df['Year'] == 2017][0]

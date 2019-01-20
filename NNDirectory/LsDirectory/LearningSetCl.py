@@ -8,19 +8,17 @@ from NNDirectory.SupportFunctions import ordinal_transform_categorials, my_min_m
 
 class LearningSet:
 
-    lags_dict = {1: 0, 2: 1, 3: 2, 4: 3,
-                 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0,
-                 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0, 21: 0, 22: 0, 23: 0,
-                 24: 24, 48: 24, 72: 24, 96: 24, 120: 24, 144: 24, 168: 168
-                }
-    #lags_dict = {1: 0, 2: 0, 3: 0, 4: 0,
+    #lags_dict = {1: 0, 2: 1, 3: 2, 4: 3,
     #             5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0,
     #             15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0, 21: 0, 22: 0, 23: 0,
-    #             24: 0, 48: 0, 72: 0, 96: 0, 120: 0, 144: 0, 168: 0
-    #             }
-    #lags_dict = {1: 0, 2: 24, 3: 24, 4: 24, 24: 24, 48: 24, 72: 24, 96: 24, 120: 24, 144: 24, 168: 168
-    #             }
-#
+    #             24: 24, 48: 24, 72: 24, 96: 24, 120: 24, 144: 24, 168: 168
+    #            }
+    lags_dict = {1: 0, 2: 0, 3: 0, 4: 0,
+                 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0,
+                 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0, 21: 0, 22: 0, 23: 0,
+                 24: 0, 48: 0, 72: 0, 96: 0, 120: 0, 144: 0, 168: 0
+                 }
+
     initial_df = None
     learning_set = None
 
@@ -32,44 +30,33 @@ class LearningSet:
 
 
     def create_learningSet(self, df: pd.DataFrame):
-        df['DiffHistoryLoad'] = df['HistoryLoad'].diff(1)
-        init_ts = df['DiffHistoryLoad']
-        #init_ts = df['HistoryLoad']
-        differences_ts_dict = {0: init_ts,
-                               1: init_ts.diff(1),
-                               2: init_ts.diff(2),
-                               3: init_ts.diff(3),
-                               4: init_ts.diff(4),
-                               24: init_ts.diff(24),
-                               168: init_ts.diff(168)
-                               }
+        # df['DiffHistoryLoad'] = df['HistoryLoad'].diff(1)
+        # init_ts = df['DiffHistoryLoad']
+        init_ts = df['HistoryLoad']
+        # differences_ts_dict = {# 0: init_ts,
+        #                        1: init_ts.diff(1),
+        #                        2: init_ts.diff(2),
+        #                        3: init_ts.diff(3),
+        #                        4: init_ts.diff(4),
+        #                        24: init_ts.diff(24),
+        #                        168: init_ts.diff(168)
+        #                        }
 
         lags = self.lags_dict.keys()
-        #for l in lags:
-        #    diff_key = self.lags_dict.get(l)
-        #    ts_by_diff_key = differences_ts_dict.get(diff_key)
-        #    name = 'lag' + str(l) + 'd' + str(diff_key)
-        #    # df[name] = ts_by_diff_key.shift(l) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!WRONG
-        #    ser = ts_by_diff_key[diff_key + 1:]
-        #    laggs = pd.Series(np.repeat(np.nan, l+1))
-        #    fin_ser = laggs.append(ser, ignore_index=True)
-        #    fin_ser = fin_ser[:init_ts.shape[0]]
-        #    df[name] = fin_ser
         for l in lags:
-            diff_key = self.lags_dict.get(l)
-            ts_by_diff_key = differences_ts_dict.get(diff_key)
-            name = 'lag' + str(l) + 'd' + str(diff_key)
-            # df[name] = ts_by_diff_key.shift(l) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!WRONG
-            fin_ser = ts_by_diff_key.shift(l)
-            df[name] = fin_ser
-        window = df['lag1d0'].rolling(window=4)
-        means = window.mean()
-        maxs = window.max()
-        mins = window.min()
-        df['means_1lag'] = means
-        df['max_1lag'] = maxs
-        df['min_1lag'] = mins
-        print('count of nan = ', df.isna().sum())
+            # diff_key = self.lags_dict.get(l)
+            ts_by_diff_key = init_ts.shift(l)
+            name = 'lag' + str(l) + 'd' + str('0')
+            df[name] = ts_by_diff_key
+
+        # window = df['lag1d0'].rolling(window=4)
+        # means = window.mean()
+        # maxs = window.max()
+        # mins = window.min()
+        # df['means_1lag'] = means
+        # df['max_1lag'] = maxs
+        # df['min_1lag'] = mins
+        # print('count of nan = ', df.isna().sum())
 
         df = df.dropna()
         print('count of nan = ', df.isna().sum())

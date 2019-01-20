@@ -1,5 +1,5 @@
 import pandas as pd
-from sklearn.preprocessing import OrdinalEncoder, MinMaxScaler, OneHotEncoder, LabelEncoder
+from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, LabelEncoder
 
 
 def ordinal_transform_categorials(df, col_names):
@@ -7,7 +7,7 @@ def ordinal_transform_categorials(df, col_names):
     df_to_enc = df.drop(cl_enc, axis=1)
     enc_col_names = df_to_enc.columns.values
     df_not_enc = df.drop(col_names, axis=1)
-    enc = OrdinalEncoder()
+    enc = LabelEncoder()
     df_to_enc_arr = enc.fit_transform(df_to_enc)
     df_to_enc = pd.DataFrame(data=df_to_enc_arr[0:, 0:], index=df_to_enc.index, columns=enc_col_names)
     df = pd.concat([df_to_enc, df_not_enc], axis=1, sort=False, join_axes=[df.index])

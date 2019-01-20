@@ -5,7 +5,7 @@ from sklearn.model_selection import TimeSeriesSplit
 import matplotlib.pyplot as plt
 from NNDirectory.LsDirectory.LearningSetCl import LearningSet
 
-ls = LearningSet(path_to_df=r'C:\Users\vgv\Desktop\PythonData\cleanedDf.txt')
+ls = LearningSet(path_to_df=r'C:\Users\Ilya\Desktop\ml\cleanedDf.txt')
 my_df = ls.create_learningSet(ls.initial_df)
 my_df = my_df.drop('HistoryLoad', axis=1)
 my_df = my_df.loc[my_df['Year'] < 2017]
