@@ -57,7 +57,7 @@ class MyCv:
                                                            monitor='val_mean_absolute_error',
                                                            #monitor='val_loss',
                                                            min_delta=1e-3,
-                                                           patience=30,
+                                                           patience=15,
                                                            verbose=2,
                                                            mode='min',
                                                            restore_best_weights=True
@@ -67,7 +67,7 @@ class MyCv:
                                                                  monitor='val_mean_absolute_error',
                                                                  #monitor='loss',
                                                                  min_delta=1e-3,
-                                                                 patience=20,
+                                                                 patience=15,
                                                                  verbose=2,
                                                                  mode='min',
                                                                  restore_best_weights=True
@@ -81,20 +81,20 @@ class MyCv:
         self.results_cv = list()
         counter_load_weigths = 0
 
-        # if trained is True:
-        #     nnPred = NNparams(hidden=[self.hid], dropout=[0.0],
-        #                       optimizer=keras.optimizers.Adam(),
-        #                       l1reg=0, l2reg=0,
-        #                       activation='relu', input_dim=self.input_shape,
-        #                       loss='mean_sqaured_error',
-        #                       train_metric=['mean_absolute_error'],
-        #                       batch_size=168,
-        #                       kernel_init='random_normal', bias_init='zeros',
-        #                       compile=False
-        #                       )
-        #     nnPred.get_nn_model().load_weights(self.model_cv_filepath)
-        #     nnPred.get_nn_model().compile(loss=nnPred.loss, optimizer=nnPred.optimizer, metrics=nnPred.train_metric)
-        #     nn = nnPred
+        if trained is True:
+            nnPred = NNparams(hidden=nn.hidden, dropout=nn.dropout,
+                              optimizer=keras.optimizers.Adadelta(),
+                              l1reg=nn.l1, l2reg=nn.l2,
+                              activation=nn.activation, input_dim=self.input_shape,
+                              loss='mean_squared_error',
+                              train_metric=['mean_absolute_error'],
+                              batch_size=nn.batch_size,
+                              kernel_init='random_uniform', bias_init='zeros',
+                              compile=False
+                              )
+            nnPred.get_nn_model().load_weights(self.model_cv_filepath)
+            nnPred.get_nn_model().compile(loss=nnPred.loss, optimizer=nnPred.optimizer, metrics=nnPred.train_metric)
+            nn = nnPred
         # initial_ep = 0
         # for train_idx, val_idx in my_cv.split(X):
         #     if counter_load_weigths > 0:
@@ -133,6 +133,7 @@ class MyCv:
         #     valid_error = res_fit.history['val_mean_absolute_error']
         #     self.results_cv.append(([train_error], [valid_error]))
         #     nn.get_nn_model().save_weights(filepath=self.model_cv_filepath)
+
         ind = Xset.index.values
         last = ind[-1]
         x_train_cv = Xset.iloc[ : (last - 8140), :]
@@ -165,49 +166,11 @@ class MyCv:
         # valid_error = res_fit.history['val_mean_absolute_error']
         # self.results_cv.append(([train_error], [valid_error]))
         # #nn.get_nn_model().save(filepath=self.model_path, overwrite=True, include_optimizer=True)
-        self.buildCvPlot()
+        # self.buildCvPlot()
         self.recommended_train_epoch = round(self.epoch_cv/counter_load_weigths)
         nn.get_nn_model().save_weights(filepath=self.model_cv_filepath)
         return nn.get_nn_model()
 
-
-    #def myCross_validation(self, nn: NNparams, X, Y, n_folds=5, trained=False, max_epoch=1000):
-    #    my_cv = TimeSeriesSplit(n_splits=5)
-    #    #my_cv = KFold(n_splits=5)
-    #    self.results_cv = list()
-    #    counter_load_weigths = 0
-#
-    #    #if trained is True:
-    #    #    model = load_model(filepath=self.model_path, compile=True)
-    #    #    nn.set_nn_model(model)
-#
-    #    for train_idx, val_idx in my_cv.split(X):
-    #        x_train_cv = X[train_idx]
-    #        y_train_cv = Y[train_idx]
-    #        x_valid_cv = X[val_idx]
-    #        y_valid_cv = Y[val_idx]
-    #    #x_train_cv = X[ : (X.shape[0] -168), ]
-    #    #y_train_cv = Y[ : (X.shape[0] -168), ]
-    #    #x_valid_cv = X[(X.shape[0] - 167) :, ]
-    #    #y_valid_cv = Y[(X.shape[0] - 167) :, ]
-    #        res_fit = nn.get_nn_model().fit( x=x_train_cv,
-    #                                         y=y_train_cv,
-    #                                         epochs=max_epoch,
-    #                                         shuffle=False,
-    #                                         batch_size=nn.batch_size,
-    #                                         verbose=2,
-    #                                         validation_data=(x_valid_cv, y_valid_cv),
-    #                                         callbacks=[self.early_stop_cv]
-    #                                         )
-    #        counter_load_weigths = counter_load_weigths + 1
-    #        self.epoch_cv = self.epoch_cv + len(res_fit.history['loss'])
-    #        train_error = res_fit.history['mean_absolute_error']
-    #        valid_error = res_fit.history['val_mean_absolute_error']
-    #        self.results_cv.append(([train_error], [valid_error]))
-    #        #nn.get_nn_model().save(filepath=self.model_path, overwrite=True, include_optimizer=True)
-    #
-    #    self.recommended_train_epoch = round(self.epoch_cv / n_folds)
-    #    return nn.get_nn_model()
 
     def save_model_to_json(self, myNN: NNparams):
         model_json = myNN.get_nn_model().to_json()
@@ -229,7 +192,7 @@ class MyCv:
 
     def train_final_model(self, nn : NNparams, X, Y):
         nnPred = NNparams(hidden=nn.hidden, dropout=nn.dropout,
-                          optimizer=keras.optimizers.Adam(lr=1e-3, amsgrad=True),
+                          optimizer=keras.optimizers.Adadelta(),
                           l1reg=nn.l1, l2reg=nn.l2,
                           activation=nn.activation, input_dim=self.input_shape,
                           loss='mean_squared_error',
@@ -280,7 +243,7 @@ class MyCv:
         train_error = res_fit.history['mean_absolute_error']
         valid_error = res_fit.history['val_mean_absolute_error']
         self.results_cv.append(([train_error], [valid_error]))
-        #self.buildCvPlot()
+        # self.buildCvPlot()
         return nn.get_nn_model()
 
     def buildCvPlot(self):

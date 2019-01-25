@@ -7,6 +7,8 @@ import sklearn
 import matplotlib.pyplot as plt
 from scipy.stats import boxcox
 from typing import Dict, List
+
+from sklearn.decomposition import PCA
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder, MinMaxScaler, OrdinalEncoder
 
 from DataDirectory.LoadData import LoadData
@@ -47,6 +49,16 @@ class MyPreprocess:
         response_series = response_series.diff(self.prediction_lag_diff).values
         self.learning_set[self.response] = pd.Series(response_series, index=self.learning_set.index)
 
+    def set_prev_temp_workType(self):
+        lag = [24,48,72,96,120,144,168]
+        for l in lag:
+            prevTemp = self.learning_set['Temperature'].shift(l).values
+            name = 'temp' + str(l)
+            self.learning_set[name] = pd.Series(prevTemp, index=self.learning_set.index)
+
+        prevWorkType = self.learning_set['WorkType'].shift(24).values
+        self.learning_set['PrevWorkType'] = pd.Series(prevWorkType, index=self.learning_set.index)
+
     def set_augmentations_lags(self, isDiff:bool):
         init_series = self.learning_set[self.response]
         if isDiff is False:
@@ -67,6 +79,25 @@ class MyPreprocess:
                     lag_series = diff_series.shift(lag).values
                     name = 'lag' + str(lag)
                     self.learning_set[name] = pd.Series(lag_series, index=self.learning_set.index)
+
+    def transformPca(self, df, matching, n_components):
+        df_to_pca = df.loc[:, matching]
+        df = df.drop(df.columns.to_series()[matching], axis=1)
+        #####################
+
+        pca = PCA(svd_solver='randomized', n_components=n_components)
+        #X_pca = pca.fit(df_to_pca)
+
+        #print('Sum of pca = ', sum(pca.explained_variance_ratio_[0:n_components]))
+        ind = df_to_pca.index.values
+
+        newData = pca.fit_transform(df_to_pca)
+        print(pca.explained_variance_ratio_)
+        names_pca = ['pca' + str(x) for x in range(n_components)]
+        pcadf = pd.DataFrame(data=newData[0:, 0:], columns=names_pca, index=ind)
+        ######################
+        res = pd.concat([df, pcadf], axis=1)
+        return res
 
     def encode_one_hot(self, df: pd.DataFrame):
         df_c = df.copy(deep=True)

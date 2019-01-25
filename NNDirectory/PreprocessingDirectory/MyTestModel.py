@@ -21,8 +21,8 @@ class MyTestModel:
         history_load_df = self.preprocess.learning_set[['HistoryLoad', 'Id']]
 
         # create log for prediction
-        predicions_file_path = r'C:\Users\Ilya\Desktop\PythonData\Predictions\predictions.txt'
-        prediction_Headers = 'Year Month Day Time HistoryLoad Prediction Mape\n'
+        predicions_file_path = r'C:\Users\vgv\Desktop\PythonData\Predictions\predictions.txt'
+        prediction_Headers = 'Year Month Day WorkType Time HistoryLoad Prediction Mape\n'
         f = open(predicions_file_path, "w")
         f.write(prediction_Headers)
         f.close()
@@ -33,8 +33,8 @@ class MyTestModel:
         trained = False
         retrain = False
         counter = 0
-        for i in range(first_id +800, last_id):
-            ls = self.preprocess.learning_set.loc[self.preprocess.learning_set.Id <= i]
+        for i in range(first_id, last_id):
+            ls = self.preprocess.learning_set.loc[self.preprocess.learning_set.Id <= i].copy()
             # predicted id in initial df
             prediction_row = ls.iloc[-1, :]
             id_of_predicted = ls.iloc[-1, :].Id
@@ -51,31 +51,36 @@ class MyTestModel:
             # remove unness columns
             ls = ls.drop(['HistoryLoad', 'Id'], axis=1)
 
-            current_year = ls['Year'].max()
+            # current_year = ls['Year'].max()
 
             # prepare to neural net
             train, test = self.preprocess.get_train_test_set(ls)
+            test = pd.DataFrame([test.values], columns=test.index)
+            # # scale train, test
+            # if counter != 0:
+            #     train = self.preprocess.scale_train_df(train)
+            #     test = self.preprocess.scale_test_df(pd.DataFrame([test.values], columns=test.index))
+            #     #train = self.preprocess.encode_one_hot(train)
+            #
+            #     x_test = test.drop(self.preprocess.response, axis=1)
+            #     Y = train[self.preprocess.response]
+            #     X = train.drop(self.preprocess.response, axis=1) #.values
+            # else:
+            #     train = self.preprocess.scale_train_df(train)
+            #     train['Year'] = self.preprocess.scale_collumn_prep(ls.iloc[:-1]['Year'],
+            #                                                        'Year',
+            #                                                        2017.0,
+            #                                                        2013.0)
+            #     test = self.preprocess.scale_test_df(pd.DataFrame([test.values], columns=test.index))
+            #     x_test = test.drop(self.preprocess.response, axis=1)
+            #     Y = train[self.preprocess.response]
+            #     X = train.drop(self.preprocess.response, axis=1)  # .values
+            #
+            # counter = counter + 1
 
-            # scale train, test
-            if counter != 0:
-                train = self.preprocess.scale_train_df(train)
-                test = self.preprocess.scale_test_df(pd.DataFrame([test.values], columns=test.index))
-                #train = self.preprocess.encode_one_hot(train)
-
-                x_test = test.drop(self.preprocess.response, axis=1)
-                Y = train[self.preprocess.response]
-                X = train.drop(self.preprocess.response, axis=1) #.values
-            else:
-                train = self.preprocess.scale_train_df(train)
-                train['Year'] = self.preprocess.scale_collumn_prep(ls.iloc[:-1]['Year'],
-                                                                   'Year',
-                                                                   2017.0,
-                                                                   2013.0)
-                test = self.preprocess.scale_test_df(pd.DataFrame([test.values], columns=test.index))
-                x_test = test.drop(self.preprocess.response, axis=1)
-                Y = train[self.preprocess.response]
-                X = train.drop(self.preprocess.response, axis=1)  # .values
-            counter = counter + 1
+            Y = train[self.preprocess.response]
+            X = train.drop(self.preprocess.response, axis=1) #.values
+            x_test = test.drop(self.preprocess.response, axis=1)
             if count_retrain == 168 or first_train is True:
 
                 model = self.cross_val.myCross_validation(nn=self.nn,
@@ -109,8 +114,9 @@ class MyTestModel:
             print('pred_mape: ', str(pred_mape))
 
             # write prediction log
-            prediction_log = '{0} {1} {2} {3} {4} {5} {6}\n'.format(str(prediction_history_row.iloc[0].Year), str(prediction_history_row.iloc[0].Month),
-                                                                    str(prediction_history_row.iloc[0].Day), str(prediction_history_row.iloc[0].Time),
+            prediction_log = '{0} {1} {2} {3} {4} {5} {6} {7}\n'.format(str(prediction_history_row.iloc[0].Year), str(prediction_history_row.iloc[0].Month),
+                                                                    str(prediction_history_row.iloc[0].Day),str(prediction_history_row.iloc[0].WorkType),
+                                                                        str(prediction_history_row.iloc[0].Time),
                                                                     str(HISTORICAL_LOAD), str(final_prediction),
                                                                     str(pred_mape)
                                                                     )

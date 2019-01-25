@@ -27,7 +27,7 @@ class My_Predict:
 
         # create log for prediction
         predicions_file_path = r'C:\Users\Ilya\Desktop\PythonData\Predictions\predictions.txt'
-        prediction_Headers = 'Year Month Day Time HistoryLoad Prediction Mape\n'
+        prediction_Headers = 'Year Month Day WorkType Time HistoryLoad Prediction Mape\n'
         f = open(predicions_file_path, "w")
         f.write(prediction_Headers)
         f.close()
@@ -89,8 +89,9 @@ class My_Predict:
             final_prediction = unscale_prediction
             pred_mape = mape_pred(predicted=final_prediction, history=HISTORICAL_LOAD)
 
-            prediction_log = '{0} {1} {2} {3} {4} {5} {6}\n'.format(str(prediction_row.Year), str(prediction_row.Month),
-                                                                    str(prediction_row.Day), str(prediction_row.Time),
+            prediction_log = '{0} {1} {2} {3} {4} {5} {6} {7}\n'.format(str(prediction_row.Year), str(prediction_row.Month),
+                                                                    str(prediction_row.Day), str(prediction_row.WorkType),
+                                                                    str(prediction_row.Time),
                                                                     str(HISTORICAL_LOAD), str(final_prediction),
                                                                     str(pred_mape)
                                                                     )
