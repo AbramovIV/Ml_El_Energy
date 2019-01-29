@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from typing import Dict, List
-
+import matplotlib.pyplot as plt
 
 class MyMinMaxScaller:
     a = int
@@ -30,7 +30,6 @@ class MyMinMaxScaller:
             self.max_dict[coll] = val_max
             self.min_dict[coll] = val_min
             df_c[coll] = self.my_min_max_scaller_series(df_c[coll], val_max, val_min)
-
         return df_c
 
     def scale(self, df: pd.DataFrame):
@@ -45,7 +44,6 @@ class MyMinMaxScaller:
             val_min = self.min_dict.get(coll)
             self.min_dict[coll] = val_min
             df_c[coll] = self.my_min_max_scaller_series(df_c[coll], val_max, val_min)
-
         return df_c
 
     def scale_collumn(self, ser: pd.Series, coll: str, max_val, min_val):
@@ -55,6 +53,7 @@ class MyMinMaxScaller:
 
     def my_min_max_scaller_series(self, x: pd.Series, x_max, x_min):
         return (self.b - self.a) * ((x - x_min) / (x_max - x_min)) + self.a
+
 
     def my_min_max_unscaller_series(self, x: pd.Series, coll:str, x_max, x_min):
         x_max = self.max_dict.get(coll)
